@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="24dp"
+            android:paddingBottom="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🎬"
+                android:textSize="48sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ReelSaver"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginTop="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Silent Instagram Reel Downloader"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"/>
+        </LinearLayout>
+
+        <!-- Status Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/accent"
+            app:strokeWidth="1dp">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:textSize="13sp"
+                android:lineSpacingMultiplier="1.4"
+                android:textColor="@color/text_primary"/>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Save Directory Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📁  Save Location"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp"/>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvSaveDir"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="12dp"
+                    android:fontFamily="monospace"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChooseFolder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Choose Folder"
+                    app:cornerRadius="8dp"/>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Quality Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@color/card_bg"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📺  Video Quality"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="12dp"/>
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/cgQuality"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="true"
+                    app:selectionRequired="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip1080"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1080p (Best)"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:checked="true"/>
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip720"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="720p"
+                        style="@style/Widget.Material3.Chip.Filter"/>
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip480"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="480p"
+                        style="@style/Widget.Material3.Chip.Filter"/>
+
+                </com.google.android.material.chip.ChipGroup>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Footer note -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Downloads are saved without watermark.\nThis app works in the background — you'll never leave Instagram."
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:gravity="center"
+            android:lineSpacingMultiplier="1.5"
+            android:layout_marginTop="8dp"/>
+
+    </LinearLayout>
+</ScrollView>

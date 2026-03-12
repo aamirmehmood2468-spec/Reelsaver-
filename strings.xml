@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ReelSaver</string>
+    <string name="choose_folder">Choose Save Folder</string>
+    <string name="quality_label">Video Quality</string>
+    <string name="downloading">Downloading reel…</string>
+    <string name="download_complete">Reel saved!</string>
+    <string name="download_failed">Download failed</string>
+</resources>
