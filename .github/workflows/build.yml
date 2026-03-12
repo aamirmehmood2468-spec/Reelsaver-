@@ -1,27 +1,27 @@
 name: Build ReelSaver APK
 on:
   push:
-      branches: [main]
-        workflow_dispatch:
-        jobs:
-          build:
-              runs-on: ubuntu-latest
-                  steps:
-                        - uses: actions/checkout@v4
-                              - uses: actions/setup-java@v4
-                                      with:
-                                                java-version: '17'
-                                                          distribution: 'temurin'
-                                                                - name: Download yt-dlp
-                                                                        run: |
-                                                                                  curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_aarch64 -o app/src/main/assets/yt-dlp
-                                                                                            chmod +x app/src/main/assets/yt-dlp
-                                                                                                  - name: Build APK
-                                                                                                          run: |
-                                                                                                                    chmod +x gradlew
-                                                                                                                              ./gradlew assembleDebug
-                                                                                                                                    - uses: actions/upload-artifact@v4
-                                                                                                                                            with:
-                                                                                                                                                      name: ReelSaver-APK
-                                                                                                                                                                path: app/build/outputs/apk/debug/app-debug.apk
-                                                                                                                                                                          retention-days: 30
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Download yt-dlp
+        run: |
+          curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_aarch64 -o app/src/main/assets/yt-dlp
+          chmod +x app/src/main/assets/yt-dlp
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ReelSaver-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
