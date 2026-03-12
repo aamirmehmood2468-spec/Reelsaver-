@@ -14,6 +14,7 @@ jobs:
           distribution: 'temurin'
       - name: Download yt-dlp
         run: |
+          mkdir -p app/src/main/assets
           curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_aarch64 -o app/src/main/assets/yt-dlp
           chmod +x app/src/main/assets/yt-dlp
       - name: Build APK
