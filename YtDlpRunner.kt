@@ -5,6 +5,7 @@ import android.util.Log
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
+import java.net.URL
 
 data class DownloadResult(
     val success: Boolean,
@@ -16,26 +17,40 @@ class YtDlpRunner(private val context: Context) {
 
     companion object {
         private const val TAG = "YtDlpRunner"
-        private const val BINARY_NAME = "yt-dlp"
+        private const val YTDLP_URL = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_aarch64"
     }
 
-    /**
-     * Returns path to the yt-dlp binary.
-     * On first run, copies it from assets to internal storage and makes it executable.
-     */
-    private fun getBinaryPath(): String {
-        val binFile = File(context.filesDir, BINARY_NAME)
-        if (!binFile.exists() || !binFile.canExecute()) {
-            // Copy from assets
-            context.assets.open(BINARY_NAME).use { input ->
-                binFile.outputStream().use { output ->
+    private fun getBinaryPath(): String? {
+        // Try nativeLibraryDir first (always executable on Android)
+        val nativeDir = File(context.applicationInfo.nativeLibraryDir)
+        val nativeBin = File(nativeDir, "libytdlp.so")
+        if (nativeBin.exists()) return nativeBin.absolutePath
+
+        // Try filesDir (may work on older Android)
+        val filesBin = File(context.filesDir, "yt-dlp")
+        if (filesBin.exists() && filesBin.canExecute()) return filesBin.absolutePath
+
+        // Download to filesDir
+        return downloadBinary()
+    }
+
+    private fun downloadBinary(): String? {
+        return try {
+            Log.d(TAG, "Downloading yt-dlp binary...")
+            val outFile = File(context.filesDir, "yt-dlp")
+            URL(YTDLP_URL).openStream().use { input ->
+                outFile.outputStream().use { output ->
                     input.copyTo(output)
                 }
             }
-            binFile.setExecutable(true, true)
-            Log.d(TAG, "yt-dlp binary installed at ${binFile.absolutePath}")
+            outFile.setExecutable(true, true)
+            outFile.setReadable(true, false)
+            Log.d(TAG, "yt-dlp downloaded to ${outFile.absolutePath}, size=${outFile.length()}")
+            if (outFile.length() > 1000) outFile.absolutePath else null
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to download yt-dlp", e)
+            null
         }
-        return binFile.absolutePath
     }
 
     suspend fun download(
@@ -46,8 +61,8 @@ class YtDlpRunner(private val context: Context) {
     ): DownloadResult {
         return try {
             val binaryPath = getBinaryPath()
+                ?: return DownloadResult(false, error = "Could not get yt-dlp binary. Check internet connection.")
 
-            // Format string: best video up to chosen quality + best audio, merged to mp4
             val formatStr = when (quality) {
                 "720"  -> "bestvideo[height<=720]+bestaudio/best[height<=720]"
                 "480"  -> "bestvideo[height<=480]+bestaudio/best[height<=480]"
@@ -56,64 +71,45 @@ class YtDlpRunner(private val context: Context) {
 
             val outputTemplate = "$outputDir/%(uploader)s_%(id)s.%(ext)s"
 
-            val cmd = arrayOf(
+            val pb = ProcessBuilder(
                 binaryPath,
                 "--no-playlist",
                 "--format", formatStr,
                 "--merge-output-format", "mp4",
                 "--output", outputTemplate,
-                // Remove watermark by getting clean CDN stream
-                "--add-header", "User-Agent:Mozilla/5.0",
-                // Progress output parseable
                 "--newline",
-                "--progress",
                 url
             )
+            pb.environment()["HOME"] = context.filesDir.absolutePath
+            pb.environment()["TMPDIR"] = context.cacheDir.absolutePath
+            pb.redirectErrorStream(true)
 
-            Log.d(TAG, "Running: ${cmd.joinToString(" ")}")
-
-            val process = Runtime.getRuntime().exec(cmd)
+            Log.d(TAG, "Running yt-dlp: $binaryPath $url")
+            val process = pb.start()
             var lastFileName: String? = null
 
-            // Parse stdout for progress
             val reader = BufferedReader(InputStreamReader(process.inputStream))
-            val errorReader = BufferedReader(InputStreamReader(process.errorStream))
-
-            val errorThread = Thread {
-                errorReader.lines().forEach { line ->
-                    Log.d(TAG, "yt-dlp stderr: $line")
-                }
-            }.also { it.start() }
-
             reader.lines().forEach { line ->
                 Log.d(TAG, "yt-dlp: $line")
-                // Parse progress: "[download]  42.3% of ..."
-                if (line.contains("[download]") && line.contains("%")) {
-                    val percentMatch = Regex("""(\d+\.\d+)%""").find(line)
-                    percentMatch?.groupValues?.get(1)?.toFloatOrNull()?.let { pct ->
-                        onProgress(pct.toInt())
-                    }
+                if (line.contains("%")) {
+                    Regex("""(\d+\.?\d*)%""").find(line)
+                        ?.groupValues?.get(1)?.toFloatOrNull()
+                        ?.let { onProgress(it.toInt()) }
                 }
-                // Detect output file
-                if (line.startsWith("[Merger]") || line.contains("Destination:")) {
-                    lastFileName = line.substringAfterLast("/")
-                        .substringAfterLast("\\")
-                        .trim()
+                if (line.contains("Destination:") || line.contains("[Merger]")) {
+                    lastFileName = line.substringAfterLast("/").trim()
                 }
             }
 
-            errorThread.join(5000)
             val exitCode = process.waitFor()
-
             if (exitCode == 0) {
-                DownloadResult(success = true, fileName = lastFileName ?: "reel.mp4")
+                DownloadResult(true, fileName = lastFileName ?: "reel.mp4")
             } else {
-                DownloadResult(success = false, error = "yt-dlp exited with code $exitCode")
+                DownloadResult(false, error = "yt-dlp failed (code $exitCode). Try again.")
             }
-
         } catch (e: Exception) {
-            Log.e(TAG, "Exception during download", e)
-            DownloadResult(success = false, error = e.message)
+            Log.e(TAG, "Exception", e)
+            DownloadResult(false, error = e.message)
         }
     }
 }
