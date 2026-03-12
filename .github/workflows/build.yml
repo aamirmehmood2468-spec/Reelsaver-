@@ -14,6 +14,67 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Fix project structure
+        run: |
+          # Create all required directories
+          mkdir -p app/src/main/kotlin/com/reelsaver/service
+          mkdir -p app/src/main/kotlin/com/reelsaver/util
+          mkdir -p app/src/main/kotlin/com/reelsaver/ui
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/res/mipmap-anydpi-v26
+          mkdir -p app/src/main/assets
+
+          # Move Kotlin source files
+          [ -f ShareReceiverActivity.kt ] && mv ShareReceiverActivity.kt app/src/main/kotlin/com/reelsaver/
+          [ -f DownloadService.kt ] && mv DownloadService.kt app/src/main/kotlin/com/reelsaver/service/
+          [ -f MainActivity.kt ] && mv MainActivity.kt app/src/main/kotlin/com/reelsaver/ui/
+          [ -f Prefs.kt ] && mv Prefs.kt app/src/main/kotlin/com/reelsaver/util/
+          [ -f YtDlpRunner.kt ] && mv YtDlpRunner.kt app/src/main/kotlin/com/reelsaver/util/
+
+          # Move XML resources
+          [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/
+          [ -f activity_main.xml ] && mv activity_main.xml app/src/main/res/layout/
+          [ -f strings.xml ] && mv strings.xml app/src/main/res/values/
+          [ -f colors.xml ] && mv colors.xml app/src/main/res/values/
+          [ -f themes.xml ] && mv themes.xml app/src/main/res/values/
+
+          # Move drawable files
+          for f in ic_check.xml ic_download.xml ic_error.xml ic_launcher_background.xml ic_launcher_foreground.xml card_bg.xml card_bg_clickable.xml; do
+            [ -f "$f" ] && mv "$f" app/src/main/res/drawable/
+          done
+
+          # Create adaptive icon for mipmap
+          cat > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml << 'ICON'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@drawable/ic_launcher_background"/>
+              <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+          </adaptive-icon>
+          ICON
+          cp app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+
+          # Fix build.gradle - move app build.gradle if needed
+          if [ -f build.gradle ] && grep -q "com.android.application" build.gradle; then
+            cp build.gradle app/build.gradle
+            # Create root build.gradle
+            cat > build.gradle << 'ROOTGRADLE'
+          buildscript {
+              ext.kotlin_version = '1.9.10'
+              repositories { google(); mavenCentral() }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:8.1.2'
+                  classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+              }
+          }
+          allprojects { repositories { google(); mavenCentral() } }
+          ROOTGRADLE
+          fi
+
+          echo "=== Project structure ==="
+          find . -name "*.kt" -o -name "*.xml" -o -name "*.gradle" | grep -v ".github" | sort
+
       - name: Install Gradle
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.1-bin.zip
